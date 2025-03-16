@@ -7,36 +7,11 @@ from fastapi import HTTPException
 from datetime import date
 
 
-REGEX_NAMES = re.compile(r"^[a-zA-Zа-яА-Я ,.'-]+$")
-
 REGEX_PASSWORD = re.compile(r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$")
 
 class UserRegisterSchema(BaseModel):
     email: EmailStr
     password: str
-    first_name: str | None = Field(default=None, max_length=256)
-    last_name: str | None = Field(default=None, max_length=256)
-    date_of_birth: date | None = Field(default=None)
-    
-    @field_validator('first_name', mode='before')
-    @classmethod
-    def validate_first_name(cls, value):
-        if not REGEX_NAMES.match(value):
-            raise HTTPException(
-                status_code=422,
-                detail="Имя и фамилия могут содержать только буквы, пробелы, апострофы, дефисы и точки."
-            )
-        return value
-    
-    @field_validator('last_name', mode='before')
-    @classmethod
-    def validate_last_name(cls, value):
-        if not REGEX_NAMES.match(value):
-            raise HTTPException(
-                status_code=422,
-                detail="Имя и фамилия могут содержать только буквы, пробелы, апострофы, дефисы и точки."
-            )
-        return value
     
     @field_validator('password', mode='before')
     @classmethod
