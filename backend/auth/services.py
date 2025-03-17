@@ -59,6 +59,7 @@ async def authenticate(user: UserLoginSchema, response: Response, db: AsyncSessi
         key='access_token',
         value=access_token,
         httponly=True,
+        secure=True,
         max_age=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
         samesite='Strict',
     )
@@ -67,8 +68,13 @@ async def authenticate(user: UserLoginSchema, response: Response, db: AsyncSessi
         key='refresh_token',
         value=refresh_token,
         httponly=True,
+        secure=True,
         max_age=timedelta(days=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
         samesite='Strict',
     )
 
     return TokenResponseSchema(access_token=access_token, token_type='bearer')
+
+async def logout(response: Response):
+    response.delete_cookie('access_token')
+    response.delete_cookie('refresh_token')
