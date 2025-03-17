@@ -9,6 +9,10 @@ from datetime import date
 
 REGEX_PASSWORD = re.compile(r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$")
 
+class TokenResponseSchema(BaseModel):
+    access_token: str
+    token_type: str
+
 class UserRegisterSchema(BaseModel):
     email: EmailStr
     password: str
@@ -22,3 +26,7 @@ class UserRegisterSchema(BaseModel):
                 detail="Пароль должен содержать минимум 8 символов, хотя бы одну заглавную букву, одну строчную букву, одну цифру и один специальный символ (#?!@$%^&*-)."
             )
         return value
+
+class UserLoginSchema(BaseModel):
+    email: EmailStr
+    password: str
