@@ -18,3 +18,9 @@ class UserResponseSchema(BaseORMSchema):
     date_of_birth: date | None
     is_active: bool
     created_at: datetime
+
+class UserUpdateSchema(BaseORMSchema):
+    email: EmailStr | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    date_of_birth: date | None = None

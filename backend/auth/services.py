@@ -69,7 +69,7 @@ async def authenticate(user: UserLoginSchema, response: Response, db: AsyncSessi
         value=refresh_token,
         httponly=True,
         secure=True,
-        max_age=timedelta(days=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+        max_age=timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
         samesite='Strict',
     )
 
