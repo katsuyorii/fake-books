@@ -1,4 +1,4 @@
-from fastapi import HTTPException, Response
+from fastapi import HTTPException, Response, Request
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +8,7 @@ from datetime import timedelta
 from src.config import settings
 from users.models import UserModel
 from .schemas import UserRegisterSchema, UserLoginSchema, TokenResponseSchema
-from .utils import hashing_password, verify_password, create_access_token, create_refresh_token
+from .utils import hashing_password, verify_password, create_access_token, create_refresh_token, verify_refresh_token
 
 
 async def registration(user_data: UserRegisterSchema, db: AsyncSession):
@@ -78,3 +78,27 @@ async def authenticate(user: UserLoginSchema, response: Response, db: AsyncSessi
 async def logout(response: Response):
     response.delete_cookie('access_token')
     response.delete_cookie('refresh_token')
+
+async def refresh(request: Request, response: Response) -> TokenResponseSchema:
+    refresh_token = request.cookies.get('refresh_token')
+
+    if not refresh_token:
+        raise HTTPException(
+            status_code=401,
+            detail="Refresh token отсутствует"
+        )
+    
+    payload = verify_refresh_token(refresh_token)
+
+    new_access_token = create_access_token(payload)
+
+    response.set_cookie(
+        key='access_token',
+        value=new_access_token,
+        secure=True,
+        httponly=True,
+        max_age=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+        samesite='Strict',
+    )
+
+    return TokenResponseSchema(access_token=new_access_token, token_type='bearer')

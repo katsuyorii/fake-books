@@ -61,3 +61,20 @@ def verify_access_token(access_token: str) -> dict:
             detail="Недействительный access токен. Проверьте правильность данных.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+def verify_refresh_token(refresh_token: str) -> dict:
+    try:
+        payload = jwt.decode(jwt=refresh_token, key=settings.REFRESH_SECRET_KEY, algorithms=[settings.ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=401,
+            detail="Refresh токен истёк. Пожалуйста, войдите снова.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=401,
+            detail="Недействительный refresh токен. Проверьте правильность данных.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
