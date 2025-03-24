@@ -1,9 +1,13 @@
 import bcrypt
 import jwt
 
+from redis.asyncio import Redis
+
 from fastapi import HTTPException
 
 from datetime import datetime, timedelta, timezone
+
+from time import time
 
 from src.config import settings
 
@@ -78,3 +82,13 @@ async def verify_refresh_token(refresh_token: str) -> dict:
             detail="Недействительный refresh токен. Проверьте правильность данных.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+async def add_token_to_blacklist(refresh_token: str, redis: Redis):
+    payload = await verify_refresh_token(refresh_token)
+    exp = payload.get('exp')
+
+    expires_in = exp - int(time())
+    await redis.setex(refresh_token, expires_in, "blacklisted")
+
+async def is_token_to_blacklist(refresh_token: str, redis: Redis) -> bool:
+    return await redis.exists(refresh_token)

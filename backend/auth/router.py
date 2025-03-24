@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Response, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_session
+from src.redis import get_redis
 from .schemas import UserRegisterSchema, UserLoginSchema, TokenResponseSchema
 from .services import registration, authenticate, logout, refresh
 
@@ -23,11 +24,11 @@ async def login_user(user: UserLoginSchema, response: Response, db: AsyncSession
     return await authenticate(user, response, db)
 
 @auth_router.post('/logout')
-async def logout_user(response: Response):
-    await logout(response)
+async def logout_user(request: Request, response: Response, redis = Depends(get_redis)):
+    await logout(request, response, redis)
 
     return {"message": "Вы вышли из системы"}
 
 @auth_router.post('/refresh', response_model=TokenResponseSchema)
-async def refresh_token(request: Request, response: Response):
-    return await refresh(request, response)
+async def refresh_token(request: Request, response: Response, redis = Depends(get_redis)):
+    return await refresh(request, response, redis)

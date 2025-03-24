@@ -3,12 +3,14 @@ from fastapi import HTTPException, Response, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from redis.asyncio import Redis
+
 from datetime import timedelta
 
 from src.config import settings
 from users.models import UserModel
 from .schemas import UserRegisterSchema, UserLoginSchema, TokenResponseSchema
-from .utils import hashing_password, verify_password, create_access_token, create_refresh_token, verify_refresh_token
+from .utils import hashing_password, verify_password, create_access_token, create_refresh_token, verify_refresh_token, add_token_to_blacklist, is_token_to_blacklist
 
 
 async def registration(user_data: UserRegisterSchema, db: AsyncSession):
@@ -75,17 +77,26 @@ async def authenticate(user: UserLoginSchema, response: Response, db: AsyncSessi
 
     return TokenResponseSchema(access_token=access_token, token_type='bearer')
 
-async def logout(response: Response):
+async def logout(request: Request, response: Response, redis: Redis):
+    refresh_token = request.cookies.get('refresh_token')
+    await add_token_to_blacklist(refresh_token, redis)
+
     response.delete_cookie('access_token')
     response.delete_cookie('refresh_token')
 
-async def refresh(request: Request, response: Response) -> TokenResponseSchema:
+async def refresh(request: Request, response: Response, redis: Redis) -> TokenResponseSchema:
     refresh_token = request.cookies.get('refresh_token')
 
     if not refresh_token:
         raise HTTPException(
             status_code=401,
             detail="Refresh token отсутствует"
+        )
+    
+    if await is_token_to_blacklist(refresh_token, redis):
+        raise HTTPException(
+            status_code=403,
+            detail='Refresh токен заблокирован!'
         )
     
     payload = await verify_refresh_token(refresh_token)
