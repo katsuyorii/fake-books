@@ -11,7 +11,7 @@ from .models import UserModel
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_session)) -> UserModel:
-    payload = verify_access_token(token)
+    payload = await verify_access_token(token)
     user = await get_user_by_email(payload.get('sub'), db)
 
     return user

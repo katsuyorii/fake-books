@@ -22,7 +22,7 @@ async def registration(user_data: UserRegisterSchema, db: AsyncSession):
         )
 
     user_data_dict = user_data.model_dump()
-    user_data_dict['password'] = hashing_password(user_data.password)
+    user_data_dict['password'] = await hashing_password(user_data.password)
 
     user = UserModel(**user_data_dict)
     db.add(user)
@@ -39,18 +39,18 @@ async def authenticate(user: UserLoginSchema, response: Response, db: AsyncSessi
             detail='Неверный адрес электронный почты или пароль!'
         )
     
-    if not verify_password(user.password, existing_user.password):
+    if not await verify_password(user.password, existing_user.password):
         raise HTTPException(
             status_code=401,
             detail='Неверный адрес электронный почты или пароль!'
         )
     
-    access_token = create_access_token({
+    access_token = await create_access_token({
         'sub': existing_user.email,
         'role': existing_user.role,
     })
 
-    refresh_token = create_refresh_token({
+    refresh_token = await create_refresh_token({
         'sub': existing_user.email,
         'role': existing_user.role,
     })
@@ -88,9 +88,9 @@ async def refresh(request: Request, response: Response) -> TokenResponseSchema:
             detail="Refresh token отсутствует"
         )
     
-    payload = verify_refresh_token(refresh_token)
+    payload = await verify_refresh_token(refresh_token)
 
-    new_access_token = create_access_token(payload)
+    new_access_token = await create_access_token(payload)
 
     response.set_cookie(
         key='access_token',

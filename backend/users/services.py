@@ -28,13 +28,13 @@ async def update_user(user_update: UserUpdateSchema, current_user: UserModel, db
 async def update_password_user(user_passwords: UserPasswordUpdateSchema, current_user: UserModel, db: AsyncSession):
     user_passwords_data = user_passwords.model_dump()
 
-    if not verify_password(user_passwords_data.get('old_password'), current_user.password):
+    if not await verify_password(user_passwords_data.get('old_password'), current_user.password):
         raise HTTPException(
             status_code=401,
             detail='Текущий пароль введен не верно!'
         )
     
-    current_user.password = hashing_password(user_passwords_data.get('new_password'))
+    current_user.password = await hashing_password(user_passwords_data.get('new_password'))
 
     db.add(current_user)
     await db.flush()

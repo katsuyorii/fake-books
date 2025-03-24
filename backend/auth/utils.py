@@ -8,16 +8,16 @@ from datetime import datetime, timedelta, timezone
 from src.config import settings
 
 
-def hashing_password(password: str) -> str:
+async def hashing_password(password: str) -> str:
     password_bytes = password.encode()
     salt = bcrypt.gensalt()
 
     return bcrypt.hashpw(password_bytes, salt).decode()
 
-def verify_password(password: str, hashed_password: str) -> bool:
+async def verify_password(password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(password.encode(), hashed_password.encode())
 
-def create_access_token(payload: dict, expires_delta: timedelta | None = None) -> str:
+async def create_access_token(payload: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = payload.copy()
     
     if expires_delta:
@@ -31,7 +31,7 @@ def create_access_token(payload: dict, expires_delta: timedelta | None = None) -
 
     return access_token
 
-def create_refresh_token(payload: dict, expires_delta: timedelta | None = None) -> str:
+async def create_refresh_token(payload: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = payload.copy()
     
     if expires_delta:
@@ -45,7 +45,7 @@ def create_refresh_token(payload: dict, expires_delta: timedelta | None = None) 
 
     return refresh_token
 
-def verify_access_token(access_token: str) -> dict:
+async def verify_access_token(access_token: str) -> dict:
     try:
         payload = jwt.decode(jwt=access_token, key=settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         return payload
@@ -62,7 +62,7 @@ def verify_access_token(access_token: str) -> dict:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-def verify_refresh_token(refresh_token: str) -> dict:
+async def verify_refresh_token(refresh_token: str) -> dict:
     try:
         payload = jwt.decode(jwt=refresh_token, key=settings.REFRESH_SECRET_KEY, algorithms=[settings.ALGORITHM])
         return payload
